@@ -1,4 +1,5 @@
 VERSION=1.18.1
+NAME=golang-sddc
 MAINTAINER=sddc@bancaditalia.it
 LICENSE="BSD 3 Clause"
 ITERATION=1
@@ -9,15 +10,15 @@ go$(VERSION).linux-amd64.tar.gz:
 
 .phony: deb
 deb: go$(VERSION).linux-amd64.tar.gz
-	@fpm -s tar -t deb --prefix /usr/local --name golang --version $(VERSION) --iteration $(ITERATION) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) --deb-compression bzip2 go$(VERSION).linux-amd64.tar.gz
+	@fpm -s tar -t deb --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(ITERATION) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) --deb-compression bzip2 go$(VERSION).linux-amd64.tar.gz
 
 .phony: rpm
 rpm: go$(VERSION).linux-amd64.tar.gz
-	@fpm -s tar -t rpm --prefix /usr/local --name golang --version $(VERSION) --iteration $(ITERATION) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) go$(VERSION).linux-amd64.tar.gz
+	@fpm -s tar -t rpm --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(ITERATION) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) go$(VERSION).linux-amd64.tar.gz
 
 .phony: clean
 clean:
-	@rm -rf golang_$(VERSION)-$(ITERATION)_amd64.deb
+	@rm -rf $(NAME)_$(VERSION)-$(ITERATION)_amd64.deb
 
 .phony: reset
 reset: clean
