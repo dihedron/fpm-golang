@@ -1,4 +1,5 @@
-VERSION=1.18.1
+NAME=golang-sddc
+VERSION=1.18.2
 MAINTAINER=maintainer@example.com
 LICENSE="BSD 3 Clause"
 RELEASE=1
@@ -9,16 +10,16 @@ go$(VERSION).linux-amd64.tar.gz:
 
 .phony: deb
 deb: go$(VERSION).linux-amd64.tar.gz
-	@fpm -s tar -t deb --prefix /usr/local --name golang --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) --deb-compression bzip2 go$(VERSION).linux-amd64.tar.gz
+	@fpm -s tar -t deb --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) --deb-compression bzip2 go$(VERSION).linux-amd64.tar.gz
 
 .phony: rpm
 rpm: go$(VERSION).linux-amd64.tar.gz
-	@fpm -s tar -t rpm --prefix /usr/local --name golang --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) go$(VERSION).linux-amd64.tar.gz
+	@fpm -s tar -t rpm --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) go$(VERSION).linux-amd64.tar.gz
 
 .phony: clean
 clean:
-	@rm -rf golang_$(VERSION)-$(RELEASE)_amd64.deb
-	@rm -rf golang_$(VERSION)-$(RELEASE)_amd64.rpm
+	@rm -rf $(NAME)_$(VERSION)-$(RELEASE)_amd64.deb
+	@rm -rf $(NAME)_$(VERSION)-$(RELEASE)_amd64.rpm
 
 .phony: reset
 reset: clean
