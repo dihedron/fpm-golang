@@ -1,6 +1,6 @@
 VERSION=1.18.2
 NAME=golang-sddc
-MAINTAINER=sddc@bancaditalia.it
+MAINTAINER=maintainer@example.com
 LICENSE="BSD 3 Clause"
 RELEASE=1
 URL=https://go.dev/
