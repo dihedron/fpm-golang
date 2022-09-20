@@ -1,4 +1,4 @@
-VERSION=1.18.3
+VERSION=1.19.1
 NAME=golang-sddc
 MAINTAINER=maintainer@example.com
 LICENSE="BSD 3 Clause"
