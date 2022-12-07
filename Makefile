@@ -1,4 +1,4 @@
-VERSION=1.19.1
+VERSION=1.19.3
 NAME=golang-sddc
 MAINTAINER=maintainer@example.com
 LICENSE="BSD 3 Clause"
@@ -45,6 +45,7 @@ else ifneq (,$(wildcard /etc/debian_version))
 	@echo "Setting up prerequisite tools for Debian Linux"
 else ifneq (,$(wildcard /etc/redhat-release)) 
 	@echo "Setting up prerequisite tools for Red Hat Enterprise Linux"
+	yum install -y wget ruby rpm-build && gem install fpm
 else ifneq (,$(wildcard /etc/fedora-release))
 	@echo "Setting up prerequisite tools for Fedora Linux"
 endif
