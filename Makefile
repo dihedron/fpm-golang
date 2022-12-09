@@ -1,20 +1,22 @@
-VERSION=1.19.3
+VERSION=1.19.4
 NAME=golang-sddc
 MAINTAINER=maintainer@example.com
+VENDOR=vendor@example.com
 LICENSE="BSD 3 Clause"
 RELEASE=1
-URL=https://go.dev/
+PRODUCER_URL=https://go.dev/
+DOWNLOAD_URL=$(PRODUCER_URL)
 
 go$(VERSION).linux-amd64.tar.gz:
-	@wget $(URL)dl/go$(VERSION).linux-amd64.tar.gz
+	@wget $(DOWNLOAD_URL)dl/go$(VERSION).linux-amd64.tar.gz
 
 .phony: deb
 deb: go$(VERSION).linux-amd64.tar.gz
-	@fpm -s tar -t deb --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) --deb-compression bzip2 go$(VERSION).linux-amd64.tar.gz
+	@fpm -s tar -t deb --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --vendor $(VENDOR) --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(PRODUCER_URL) --deb-compression bzip2 go$(VERSION).linux-amd64.tar.gz
 
 .phony: rpm
 rpm: go$(VERSION).linux-amd64.tar.gz
-	@fpm -s tar -t rpm --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(URL) go$(VERSION).linux-amd64.tar.gz
+	@fpm -s tar -t rpm --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --vendor $(VENDOR) --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(PRODUCER_URL) go$(VERSION).linux-amd64.tar.gz
 
 .phony: clean
 clean:
@@ -42,10 +44,10 @@ ifneq (,$(wildcard /etc/lsb-release))
 	@echo "Setting up prerequisite tools for Ubuntu or Mint Linux"
 	sudo apt-get update && sudo apt-get install ruby-dev build-essential && sudo gem install fpm
 else ifneq (,$(wildcard /etc/debian_version)) 
-	@echo "Setting up prerequisite tools for Debian Linux"
+	@echo "Setting up prerequisite tools for Debian Linux (TODO)"
 else ifneq (,$(wildcard /etc/redhat-release)) 
 	@echo "Setting up prerequisite tools for Red Hat Enterprise Linux"
 	yum install -y wget ruby rpm-build && gem install fpm
 else ifneq (,$(wildcard /etc/fedora-release))
-	@echo "Setting up prerequisite tools for Fedora Linux"
+	@echo "Setting up prerequisite tools for Fedora Linux (TODO)"
 endif
