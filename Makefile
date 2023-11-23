@@ -1,4 +1,4 @@
-VERSION=1.21.1
+VERSION=1.21.4
 NAME=golang-sddc
 MAINTAINER=maintainer@example.com
 VENDOR=vendor@example.com
