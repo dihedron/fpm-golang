@@ -1,4 +1,4 @@
-VERSION=1.21.4
+VERSION=1.22.1
 NAME=golang-sddc
 MAINTAINER=maintainer@example.com
 VENDOR=vendor@example.com
@@ -11,12 +11,48 @@ go$(VERSION).linux-amd64.tar.gz:
 	@wget $(DOWNLOAD_URL)dl/go$(VERSION).linux-amd64.tar.gz
 
 .phony: deb
-deb: go$(VERSION).linux-amd64.tar.gz
-	@fpm -s tar -t deb --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --vendor $(VENDOR) --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(PRODUCER_URL) --deb-compression bzip2 go$(VERSION).linux-amd64.tar.gz
+deb: go$(VERSION).linux-amd64.tar.gz 
+ifeq (, $(shell which nfpm))
+	@echo "Need to install nFPM first..."
+	@go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+endif
+	@rm -rf go/ 
+	@tar xzvf go$(VERSION).linux-amd64.tar.gz 2>&1 > /dev/null
+	@echo -n "Create golang $(VERSION) "
+	@VERSION=$(VERSION) nfpm package --packager deb --target .
+	@rm -rf go/
 
 .phony: rpm
-rpm: go$(VERSION).linux-amd64.tar.gz
-	@fpm -s tar -t rpm --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --vendor $(VENDOR) --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(PRODUCER_URL) go$(VERSION).linux-amd64.tar.gz
+rpm: go$(VERSION).linux-amd64.tar.gz 
+ifeq (, $(shell which nfpm))
+	@echo "Need to install nFPM first..."
+	@go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+endif
+	@rm -rf go/ 
+	@tar xzvf go$(VERSION).linux-amd64.tar.gz 2>&1 > /dev/null
+	@echo -n "Create golang $(VERSION) "
+	@VERSION=$(VERSION) nfpm package --packager rpm --target .
+	@rm -rf go/
+
+.phony: apk
+apk: go$(VERSION).linux-amd64.tar.gz 
+ifeq (, $(shell which nfpm))
+	@echo "Need to install nFPM first..."
+	@go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+endif
+	@rm -rf go/ 
+	@tar xzvf go$(VERSION).linux-amd64.tar.gz 2>&1 > /dev/null
+	@echo -n "Create golang $(VERSION) "
+	@VERSION=$(VERSION) nfpm package --packager apk --target .
+	@rm -rf go/
+
+#.phony: deb
+#deb: go$(VERSION).linux-amd64.tar.gz
+#	@fpm -s tar -t deb --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --vendor $(VENDOR) --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(PRODUCER_URL) --deb-compression bzip2 go$(VERSION).linux-amd64.tar.gz
+
+#.phony: rpm
+#rpm: go$(VERSION).linux-amd64.tar.gz
+#	@fpm -s tar -t rpm --prefix /usr/local --name $(NAME) --version $(VERSION) --iteration $(RELEASE) --description "The Go Programming Language" --vendor $(VENDOR) --maintainer $(MAINTAINER) --license $(LICENSE) --directories /usr/local/go --url $(PRODUCER_URL) go$(VERSION).linux-amd64.tar.gz
 
 .phony: clean
 clean:
