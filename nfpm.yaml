@@ -1,12 +1,12 @@
 # check https://nfpm.goreleaser.com/configuration for detailed usage
-name: "golang"
+name: "google-golang"
 arch: "amd64"
 platform: "linux"
 version: "${VERSION}"
 epoch: 1
 section: default
 provides:
-- golang
+- google-golang
 maintainer: "Andrea Funtò <dihedron.dev@gmail.com>"
 description: |
   Golang is an open-source programming language supported by Google; it
