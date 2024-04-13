@@ -6,9 +6,11 @@ go$(VERSION).linux-amd64.tar.gz:
 
 .phony: deb
 deb: go$(VERSION).linux-amd64.tar.gz 
-ifeq (, $(shell which nfpm))
+ifeq ($(GITLAB_CI),)
+ifeq ($(shell which nfpm),)
 	@echo "Need to install nFPM first..."
 	@go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+endif
 endif
 	@rm -rf go/ 
 	@tar xzvf go$(VERSION).linux-amd64.tar.gz 2>&1 > /dev/null
@@ -18,9 +20,11 @@ endif
 
 .phony: rpm
 rpm: go$(VERSION).linux-amd64.tar.gz 
-ifeq (, $(shell which nfpm))
+ifeq ($(GITLAB_CI),)
+ifeq ($(shell which nfpm),)
 	@echo "Need to install nFPM first..."
 	@go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+endif
 endif
 	@rm -rf go/ 
 	@tar xzvf go$(VERSION).linux-amd64.tar.gz 2>&1 > /dev/null
@@ -30,9 +34,11 @@ endif
 
 .phony: apk
 apk: go$(VERSION).linux-amd64.tar.gz 
-ifeq (, $(shell which nfpm))
+ifeq ($(GITLAB_CI),)
+ifeq ($(shell which nfpm),)
 	@echo "Need to install nFPM first..."
 	@go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+endif
 endif
 	@rm -rf go/ 
 	@tar xzvf go$(VERSION).linux-amd64.tar.gz 2>&1 > /dev/null
