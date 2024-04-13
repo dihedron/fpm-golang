@@ -24,9 +24,9 @@ $> make apk
 
 The makefile will automatically download the `tar.gz` package from https://go.dev and repackage it.
 
-To clean all packages, run `make clean`, and to remove downloaded files run `make reset`.
+To clean all packages and downloaded files run `make clean`.
 
 ## Prerequisites
 
-In order to create DEB, RPM and APK packages, this project uses [nFPM](https://nfpm.goreleaser.com/); if not available locally, it uses `go install` to install it, so both `make` and `go` must already be available on the packaging machine.
+In order to create DEB, RPM and APK packages, this project uses [nFPM](https://nfpm.goreleaser.com/); if not available locally, it uses `go install` to install it, so both `make` and `go` must already be available on the packaging machine if you don't want to install nFPM manually.
 

@@ -1,11 +1,5 @@
 VERSION=1.22.2
-NAME=golang-sddc
-MAINTAINER=maintainer@example.com
-VENDOR=vendor@example.com
-LICENSE="BSD 3 Clause"
-RELEASE=1
-PRODUCER_URL=https://go.dev/
-DOWNLOAD_URL=$(PRODUCER_URL)
+DOWNLOAD_URL=https://go.dev/
 
 go$(VERSION).linux-amd64.tar.gz:
 	@wget $(DOWNLOAD_URL)dl/go$(VERSION).linux-amd64.tar.gz
@@ -48,10 +42,5 @@ endif
 
 .phony: clean
 clean:
-	@rm -rf $(NAME)_$(VERSION)-$(RELEASE)_amd64.deb
-	@rm -rf $(NAME)_$(VERSION)-$(RELEASE)_amd64.rpm
-
-.phony: reset
-reset: clean
-	@rm -rf go$(VERSION).linux-amd64.tar.gz 
+	@rm -rf *.deb *.rpm *.apk *.tar.gz
 
