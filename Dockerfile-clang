@@ -1,0 +1,36 @@
+
+ARG UBUNTU_VERSION
+
+FROM ubuntu:${UBUNTU_VERSION}
+
+# update Ubuntu and add make, openssl and ca-certificates
+RUN apt-get -y update && \
+    apt-get -y dist-upgrade && \
+    apt-get -y install --no-install-recommends --no-install-suggests make clang ca-certificates openssl && \ 
+    apt-get -y autoremove && \
+    apt-get clean
+ENV CC clang
+ENV CXX clang++
+
+# install golang from build host's tar.gz archive
+ARG GOLANG_VERSION
+ADD go${GOLANG_VERSION}.linux-amd64.tar.gz /usr/local/
+ENV PATH $PATH:/usr/local/go/bin:/root/go/bin
+
+# update the certificates to validate Golang proxy downloads
+ARG CERTIFICATE_DIR=/usr/local/share/ca-certificates
+RUN \
+    openssl s_client -showcerts -connect github.com:443 | openssl x509 -outform PEM > ${CERTIFICATE_DIR}/github.crt && \
+    openssl s_client -showcerts -connect proxy.golang.org:443 |openssl x509 -outform PEM > ${CERTIFICATE_DIR}/proxy.golang.crt && \
+    update-ca-certificates
+ENV SSL_CERT_DIR /etc/ssl/certs
+
+# install Golang libraries
+RUN go install golang.org/x/vuln/cmd/govulncheck@latest && \
+    go clean -cache && \
+    go clean -testcache && \
+    go clean -fuzzcache && \
+    go clean -modcache && \
+    govulncheck --version
+
+RUN go env
