@@ -53,13 +53,21 @@ endif
 docker-go: go$(VERSION).linux-amd64.tar.gz 
 	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang -f Dockerfile-go .
 
-.phony: docker-gcc
-docker-gcc: go$(VERSION).linux-amd64.tar.gz 
-	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang-gcc -f Dockerfile-gcc .
+.phony: docker-ubuntu-gcc
+docker-ubuntu-gcc: go$(VERSION).linux-amd64.tar.gz 
+	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang-ubuntu-gcc -f Dockerfile-ubuntu-gcc .
 
-.phony: docker-clang
-docker-clang: go$(VERSION).linux-amd64.tar.gz 
-	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang-clang -f Dockerfile-clang .
+.phony: docker-ubuntu-clang
+docker-ubuntu-clang: go$(VERSION).linux-amd64.tar.gz 
+	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang-ubuntu-clang -f Dockerfile-ubuntu-clang .
+
+.phony: docker-alma-gcc
+docker-alma-gcc: go$(VERSION).linux-amd64.tar.gz 
+	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg ALMA_VERSION=latest -t golang-alma-gcc -f Dockerfile-alma-gcc .
+
+.phony: docker-alma-clang
+docker-alma-clang: go$(VERSION).linux-amd64.tar.gz 
+	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg ALMA_VERSION=latest -t golang-alma-clang -f Dockerfile-alma-clang .
 
 .phony: clean
 clean:
