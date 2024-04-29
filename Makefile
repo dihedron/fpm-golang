@@ -63,11 +63,11 @@ docker-ubuntu-clang: go$(VERSION).linux-amd64.tar.gz
 
 .phony: docker-alma-gcc
 docker-alma-gcc: go$(VERSION).linux-amd64.tar.gz 
-	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg ALMA_VERSION=latest -t golang-alma-gcc -f Dockerfile-alma-gcc .
+	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg ALMA_VERSION=8.9 -t golang-alma-gcc -f Dockerfile-alma-gcc .
 
 .phony: docker-alma-clang
 docker-alma-clang: go$(VERSION).linux-amd64.tar.gz 
-	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg ALMA_VERSION=latest -t golang-alma-clang -f Dockerfile-alma-clang .
+	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg ALMA_VERSION=8.9 -t golang-alma-clang -f Dockerfile-alma-clang .
 
 .phony: clean
 clean:
