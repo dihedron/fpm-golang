@@ -1,4 +1,4 @@
-VERSION=$(shell curl -s https://go.dev/VERSION?m=text | head -n 1 | sed -e "s/^go//")
+VERSION?=$(shell curl -s https://go.dev/VERSION?m=text | head -n 1 | sed -e "s/^go//")
 DOWNLOAD_URL=https://go.dev/
 
 go$(VERSION).linux-amd64.tar.gz:
