@@ -3,12 +3,14 @@ ARG ALMA_VERSION
 
 FROM almalinux:${ALMA_VERSION}
 
+ENV http_proxy http://host.docker.internal:3128
+
+
 # update Ubuntu and add make, openssl and ca-certificates
-RUN apt-get -y update && \
-    apt-get -y dist-upgrade && \
-    apt-get -y install --no-install-recommends --no-install-suggests build-essential ca-certificates openssl && \ 
-    apt-get -y autoremove && \
-    apt-get clean
+RUN echo "hallo, world from $(whoami) using $http_proxy"
+RUN yum -y install make gcc gcc-c++ 
+RUN dnf clean all
+RUN dnf group install "Development Tools" ca-certificates openssl
 
 # install golang from build host's tar.gz archive
 ARG GOLANG_VERSION
