@@ -18,7 +18,10 @@ homepage: "https://go.dev"
 license: "https://go.dev/LICENSE"
 contents:
 - src: go/
-  dst: /usr/local/go/
+  dst: /opt/go/
+  type: tree
+- src: etc/
+  dst: /etc/profile.d/
   type: tree
 rpm:
   packager: "Andrea Funtò <dihedron.dev@gmail.com>"
