@@ -57,6 +57,13 @@ endif
 	@VERSION=$(VERSION) nfpm package --packager apk --target .
 	@rm -rf go/
 
+.phony: install-tools
+install-tools:
+	@go install github.com/josharian/impl@latest
+	@go install github.com/haya14busa/goplay/cmd/goplay@latest
+	@go install github.com/go-delve/delve/cmd/dlv@latest
+	@go install golang.org/x/tools/gopls@latest
+
 .phony: docker-go
 docker-go: go$(VERSION).linux-amd64.tar.gz
 	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang -f Dockerfile-go .
