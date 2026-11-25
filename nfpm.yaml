@@ -1,12 +1,11 @@
 # check https://nfpm.goreleaser.com/configuration for detailed usage
 name: "google-golang"
-arch: "amd64"
+arch: "${ARCH}"
 platform: "linux"
 version: "${VERSION}"
+release: "${RELEASE}"
 epoch: 1
 section: default
-provides:
-- google-golang
 maintainer: "Andrea Funtò <dihedron.dev@gmail.com>"
 description: |
   Golang is an open-source programming language supported by Google; it
@@ -20,8 +19,18 @@ contents:
 - src: go/
   dst: /opt/go/
   type: tree
-- src: etc/
-  dst: /etc/profile.d/
-  type: tree
+- src: etc/google-golang.sh
+  dst: /etc/profile.d/google-golang.sh
+  file_info:
+    mode: 0644
 rpm:
   packager: "Andrea Funtò <dihedron.dev@gmail.com>"
+  signature:
+    key_file: "${NFPM_SIGN_KEY}"
+deb:
+  signature:
+    key_file: "${NFPM_SIGN_KEY}"
+apk:
+  signature:
+    key_file: "${NFPM_APK_SIGN_KEY}"
+    key_name: "google-golang.rsa.pub"

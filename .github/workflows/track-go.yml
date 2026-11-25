@@ -1,0 +1,207 @@
+# Packages the latest stable upstream Go release (SPEC-001).
+# Idempotent: a published release tagged go<version> means "done".
+name: track-go
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Latest stable Go version; required with revision (e.g. 1.27.4)"
+        required: false
+      revision:
+        description: "Packaging revision >= 2 (manual re-release of the latest version)"
+        required: false
+        default: "0"
+      dry_run:
+        description: "Build and smoke-test with throwaway keys, publish nothing"
+        type: boolean
+        default: false
+
+concurrency:
+  group: track-go
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  GOTOOLCHAIN: local
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      plan: ${{ steps.plan.outputs.plan }}
+      has_work: ${{ steps.plan.outputs.has_work }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          IN_VERSION: ${{ inputs.version }}
+          IN_REVISION: ${{ inputs.revision }}
+        run: |
+          set -eu
+          args=""
+          [ -z "${IN_VERSION:-}" ] || args="$args --version=$IN_VERSION"
+          [ "${IN_REVISION:-0}" = "0" ] || args="$args --revision=$IN_REVISION"
+          go build -o fpm-golang ./cmd/fpm-golang
+          # shellcheck disable=SC2086
+          plan=$(./fpm-golang release plan $args)
+          echo "$plan"
+          echo "plan=$plan" >> "$GITHUB_OUTPUT"
+          if [ "$(echo "$plan" | jq '.include | length')" -gt 0 ]; then echo "has_work=true" >> "$GITHUB_OUTPUT"; else echo "has_work=false" >> "$GITHUB_OUTPUT"; fi
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.has_work == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # real keys live only in the protected "release" environment; dry runs use "dry-run" (no secrets)
+    environment: ${{ inputs.dry_run && 'dry-run' || 'release' }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.plan).include }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - name: Prepare signing keys
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASS: ${{ secrets.GPG_PASSPHRASE }}
+          APK_KEY: ${{ secrets.APK_PRIVATE_KEY }}
+        run: |
+          set -eu
+          umask 077
+          keys="$RUNNER_TEMP/keys"; mkdir -p "$keys"
+          if [ "$DRY_RUN" = "true" ]; then
+            lab/ephemeral-keys.sh "$keys"
+            echo "NFPM_PASSPHRASE=ephemeral" >> "$GITHUB_ENV"
+          else
+            [ -n "$GPG_KEY" ] && [ -n "$APK_KEY" ] || { echo "signing secrets missing" >&2; exit 1; }
+            printf '%s\n' "$GPG_KEY" > "$keys/gpg.key"
+            printf '%s\n' "$APK_KEY" > "$keys/apk.key"
+            cp keys/google-golang.gpg.pub keys/google-golang.rsa.pub "$keys/"
+            echo "::add-mask::$GPG_PASS"
+            echo "NFPM_PASSPHRASE=$GPG_PASS" >> "$GITHUB_ENV"
+          fi
+          echo "NFPM_SIGN_KEY=$keys/gpg.key" >> "$GITHUB_ENV"
+          echo "NFPM_APK_SIGN_KEY=$keys/apk.key" >> "$GITHUB_ENV"
+          echo "KEYDIR=$keys" >> "$GITHUB_ENV"
+      - name: Download and verify tarball against the checksum database
+        env:
+          VERSION: ${{ fromJSON(needs.plan.outputs.plan).version }}
+          ARCH: ${{ matrix.arch }}
+          TARBALL: ${{ matrix.tarball }}
+          SHA256: ${{ matrix.sha256 }}
+        run: |
+          set -eu
+          make build
+          curl -fsSL -o "$TARBALL" "https://go.dev/dl/$TARBALL"
+          # go mod download validates the module hash against sum.golang.org (GOSUMDB on)
+          export GOMODCACHE="$RUNNER_TEMP/modcache" GOFLAGS=-modcacherw GOTOOLCHAIN=local
+          dir=$(cd "$RUNNER_TEMP" && go mod download -json "golang.org/toolchain@v0.0.1-go$VERSION.linux-$ARCH" | jq -r .Dir)
+          bin/fpm-golang release verify --tarball "$TARBALL" --sha256 "$SHA256" --module "$dir"
+      - name: Build packages
+        env:
+          VERSION: ${{ fromJSON(needs.plan.outputs.plan).version }}
+          REVISION: ${{ fromJSON(needs.plan.outputs.plan).revision }}
+          ARCH: ${{ matrix.arch }}
+          SHA256: ${{ matrix.sha256 }}
+        run: make packages
+      - name: Smoke test (signature, tamper, install, remove)
+        env:
+          VERSION: ${{ fromJSON(needs.plan.outputs.plan).version }}
+          PACKAGES: ${{ join(matrix.packages, ' ') }}
+          PLATFORM: linux/${{ matrix.arch }}
+        run: |
+          set -eu
+          for p in $PACKAGES; do
+            case "$p" in
+              *.deb) image=debian:stable-slim ;;
+              *.rpm) image=almalinux:9 ;;
+              *.apk) image=alpine:latest ;;
+            esac
+            docker run --rm --platform "$PLATFORM" -v "$PWD:/w:ro" -v "$KEYDIR:/k:ro" "$image" sh /w/lab/smoke.sh "/w/$p" "$VERSION" /k
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: packages-${{ matrix.arch }}
+          path: google-golang-*
+          if-no-files-found: error
+
+  publish:
+    needs: [plan, build]
+    if: needs.plan.outputs.has_work == 'true' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          pattern: packages-*
+          merge-multiple: true
+      - name: Checksums and detached signature
+        env:
+          GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASS: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -eu
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"; mkdir -m700 "$GNUPGHOME"
+          printf '%s\n' "$GPG_KEY" | gpg --batch --import
+          cd dist
+          sha256sum google-golang-* > SHA256SUMS
+          gpg --batch --pinentry-mode loopback --passphrase "$GPG_PASS" --armor --detach-sign SHA256SUMS
+          cp ../keys/google-golang.gpg.pub ../keys/google-golang.rsa.pub .
+          rm -rf "$GNUPGHOME"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/google-golang-*
+      - name: Publish release (draft first, public only when complete)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ fromJSON(needs.plan.outputs.plan).tag }}
+          VERSION: ${{ fromJSON(needs.plan.outputs.plan).version }}
+          PLAN: ${{ needs.plan.outputs.plan }}
+        run: |
+          set -eu
+          # a leftover draft of a failed run may be replaced; a published release never
+          if gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null | grep -q true; then
+            gh release delete "$TAG" --yes
+          fi
+          gh release create "$TAG" --draft --title "Go $VERSION" \
+            --notes "Official Go $VERSION linux tarballs repackaged as signed deb, rpm and apk packages. See the README for installation and verification." \
+            dist/*
+          want=$(ls dist | wc -l)
+          n=$(gh release view "$TAG" --json assets --jq '.assets | length')
+          [ "$n" -eq "$want" ] || { echo "$n assets uploaded, expected $want" >&2; exit 1; }
+          # every package announced by the plan must be among them
+          for f in $(echo "$PLAN" | jq -r '.include[].packages[]'); do [ -f "dist/$f" ] || { echo "missing $f" >&2; exit 1; }; done
+          gh release edit "$TAG" --draft=false --latest=false
