@@ -37,7 +37,7 @@ all: build
 
 .PHONY: help
 help: ## list the available targets and variables
-	@echo "Targets: build test latest deb rpm apk packages setup-tools install-tools clean docker-*"
+	@echo "Targets: build test latest deb rpm apk packages setup-tools install-tools clean"
 	@echo "Variables: VERSION (default: latest) ARCH (amd64|arm64) REVISION (default 1) SHA256"
 	@echo "Signing: NFPM_SIGN_KEY (GPG key file) + NFPM_PASSPHRASE for deb and rpm, NFPM_APK_SIGN_KEY (RSA PEM) for apk; leave unset for unsigned"
 
@@ -85,26 +85,6 @@ install-tools:
 	@go install github.com/haya14busa/goplay/cmd/goplay@latest
 	@go install github.com/go-delve/delve/cmd/dlv@latest
 	@go install golang.org/x/tools/gopls@latest
-
-.PHONY: docker-go
-docker-go: $(TARBALL)
-	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang -f Dockerfile-go .
-
-.PHONY: docker-ubuntu-gcc
-docker-ubuntu-gcc: $(TARBALL)
-	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang-ubuntu-gcc -f Dockerfile-ubuntu-gcc .
-
-.PHONY: docker-ubuntu-clang
-docker-ubuntu-clang: $(TARBALL)
-	@docker build --progress=plain --no-cache --build-arg GOLANG_VERSION=$(VERSION) --build-arg UBUNTU_VERSION=latest -t golang-ubuntu-clang -f Dockerfile-ubuntu-clang .
-
-.PHONY: docker-alma-gcc
-docker-alma-gcc: $(TARBALL) 
-	@docker build --progress=plain --no-cache --network=bridge --build-arg GOLANG_VERSION=$(VERSION) --build-arg ALMA_VERSION=8.9 -t golang-alma-gcc -f Dockerfile-alma-gcc .
-
-.PHONY: docker-alma-clang
-docker-alma-clang: $(TARBALL) 
-	@docker build --progress=plain --no-cache --network=bridge --build-arg GOLANG_VERSION=$(VERSION) --build-arg ALMA_VERSION=8.9 -t golang-alma-clang -f Dockerfile-alma-clang .
 
 .PHONY: clean
 clean:
