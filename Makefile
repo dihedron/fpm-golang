@@ -37,7 +37,7 @@ all: build
 
 .PHONY: help
 help: ## list the available targets and variables
-	@echo "Targets: build test latest deb rpm apk packages setup-tools install-tools clean"
+	@echo "Targets: build test latest deb rpm apk packages setup-tools install-tools release-major|minor|patch clean"
 	@echo "Variables: VERSION (default: latest) ARCH (amd64|arm64) REVISION (default 1) SHA256"
 	@echo "Signing: NFPM_SIGN_KEY (GPG key file) + NFPM_PASSPHRASE for deb and rpm, NFPM_APK_SIGN_KEY (RSA PEM) for apk; leave unset for unsigned"
 
@@ -65,6 +65,11 @@ $(NFPM): Makefile
 
 .PHONY: setup-tools
 setup-tools: $(NFPM)
+
+# Release the tool itself (tag vX.Y.Z); see scripts/release.sh for the checks it makes.
+.PHONY: release-major release-minor release-patch
+release-major release-minor release-patch: release-%:
+	@scripts/release.sh $*
 
 # Package the tarball with nFPM; the three formats share one recipe.
 # Export NFPM_SIGN_KEY (path) and NFPM_PASSPHRASE to sign; leave unset for an unsigned build.

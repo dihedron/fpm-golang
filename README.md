@@ -95,6 +95,10 @@ $> make help
 
 Test the signed packages in containers with `lab/smoke.sh` (see the script header); `lab/ephemeral-keys.sh <dir>` creates throwaway keys for that.
 
+## Releasing the tool
+
+`make release-patch`, `make release-minor` or `make release-major` bumps the latest `vX.Y.Z` tag, checks that you are on a clean, pushed `main`, runs `go vet`, the tests, `govulncheck` and `gitleaks`, and creates the GitHub release with generated notes. `DRY_RUN=1 make release-minor` only prints the next version.
+
 ## The `fpm-golang` command
 
 ```bash
