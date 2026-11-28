@@ -1,4 +1,4 @@
-# fpm-golang
+# autopackager-golang
 
 Repackages the official Google Go compiler (the Linux tarballs from https://go.dev/dl/) as signed `.deb`, `.rpm` and `.apk` packages, and publishes them automatically as soon as a new Go version is released upstream.
 
@@ -54,7 +54,7 @@ Packaging-only fixes are released as revisions of the same Go version: `go1.27.4
 
 The workflow [`track-go`](.github/workflows/track-go.yml) runs every 6 hours (and on demand):
 
-1. **plan** - `fpm-golang release plan` reads the upstream feed, picks the latest stable Go version and checks whether a release `go<version>` already exists; if so, nothing happens.
+1. **plan** - `autopackager-golang release plan` reads the upstream feed, picks the latest stable Go version and checks whether a release `go<version>` already exists; if so, nothing happens.
 2. **build** - per architecture it downloads the tarball, checks its sha256 against the feed, cross-checks its content against the `golang.org/toolchain` module whose hash is vouched for by the Go checksum database (`sum.golang.org`), builds the three packages with [nFPM](https://nfpm.goreleaser.com/), signs them, and smoke-tests them in Debian, AlmaLinux and Alpine containers (signature, tampering, install, `go version`, removal).
 3. **publish** - creates a draft release, uploads all assets plus `SHA256SUMS` (signed) and a build provenance attestation, and only then makes it public.
 
@@ -84,7 +84,7 @@ Commit the two public keys in `keys/`. Create a GitHub environment named `releas
 Prerequisites: `make`, `go`, `curl`; nFPM is installed at the pinned version into `bin/` automatically.
 
 ```bash
-$> make               # build bin/fpm-golang
+$> make               # build bin/autopackager-golang
 $> make deb           # package the latest Go for amd64 (also: rpm, apk, packages)
 $> make packages ARCH=arm64
 $> make packages VERSION=1.26.11 SHA256=<digest> REVISION=2
@@ -99,13 +99,13 @@ Test the signed packages in containers with `lab/smoke.sh` (see the script heade
 
 `make release-patch`, `make release-minor` or `make release-major` bumps the latest `vX.Y.Z` tag, checks that you are on a clean, pushed `main`, runs `go vet`, the tests, `govulncheck` and `gitleaks`, and creates the GitHub release with generated notes. `DRY_RUN=1 make release-minor` only prints the next version.
 
-## The `fpm-golang` command
+## The `autopackager-golang` command
 
 ```bash
-$> fpm-golang release show            # latest upstream version vs published releases
-$> fpm-golang release plan            # JSON build matrix of what is missing
-$> fpm-golang release verify --tarball go1.27.4.linux-amd64.tar.gz [--module <toolchain module dir>]
-$> fpm-golang version [-v]
+$> autopackager-golang release show            # latest upstream version vs published releases
+$> autopackager-golang release plan            # JSON build matrix of what is missing
+$> autopackager-golang release verify --tarball go1.27.4.linux-amd64.tar.gz [--module <toolchain module dir>]
+$> autopackager-golang version [-v]
 ```
 
 `release plan` and `release show` need the GitHub CLI (`gh`) authenticated for the repository.

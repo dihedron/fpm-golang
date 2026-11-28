@@ -36,7 +36,7 @@ not published. The selection rule lives in one function, so widening it later is
 ```
 cron (every 6h) / manual dispatch
         │
-   [plan job]  fpm-golang release plan
+   [plan job]  autopackager-golang release plan
         │   fetch feed → list existing GitHub releases → emit JSON matrix of MISSING
         │   (version × arch × format) combinations; empty ⇒ stop
         ▼
@@ -55,7 +55,7 @@ Idempotency is by state-in-GitHub: a Go version is "done" iff a published releas
 1. **GitHub Actions workflow** `.github/workflows/track-go.yml` — triggers: `schedule`
    (every 6 hours), `workflow_dispatch` (optional input `version` to force one version,
    e.g. a rebuild). `concurrency: track-go` (no cancel) so runs never overlap.
-2. **`cmd/fpm-golang`** (Go, `go-flags`, per AGENTS.md CLI convention) with:
+2. **`cmd/autopackager-golang`** (Go, `go-flags`, per AGENTS.md CLI convention) with:
    - `release plan` — prints the JSON build matrix of missing releases (reads the feed,
      lists releases via `gh`/GitHub API; both injectable for tests).
    - `release show` — shows what upstream offers vs what is already published.

@@ -24,13 +24,13 @@ RELEASE=$(REVISION)
 SUFFIX=-$(REVISION)
 endif
 PACKAGE=google-golang-$(ARCH_NAME)-$(VERSION)$(SUFFIX)
-CLI=bin/fpm-golang
+CLI=bin/autopackager-golang
 NFPM=bin/nfpm
-LDFLAGS=-X github.com/dihedron/fpm-golang/pkg/metadata.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo dev) \
-	-X github.com/dihedron/fpm-golang/pkg/metadata.Commit=$(shell git rev-parse --short HEAD 2>/dev/null || echo unknown) \
-	-X github.com/dihedron/fpm-golang/pkg/metadata.Date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) \
-	-X github.com/dihedron/fpm-golang/pkg/metadata.GoVersion=$(shell go env GOVERSION) \
-	-X github.com/dihedron/fpm-golang/pkg/metadata.BuildHost=$(shell go env GOOS)/$(shell go env GOARCH)
+LDFLAGS=-X github.com/dihedron/autopackager-golang/pkg/metadata.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo dev) \
+	-X github.com/dihedron/autopackager-golang/pkg/metadata.Commit=$(shell git rev-parse --short HEAD 2>/dev/null || echo unknown) \
+	-X github.com/dihedron/autopackager-golang/pkg/metadata.Date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) \
+	-X github.com/dihedron/autopackager-golang/pkg/metadata.GoVersion=$(shell go env GOVERSION) \
+	-X github.com/dihedron/autopackager-golang/pkg/metadata.BuildHost=$(shell go env GOOS)/$(shell go env GOARCH)
 
 .PHONY: all
 all: build
@@ -45,7 +45,7 @@ help: ## list the available targets and variables
 build: $(CLI)
 
 $(CLI): $(shell find cmd internal pkg -name '*.go') go.mod
-	@go build -ldflags "$(LDFLAGS)" -o $(CLI) ./cmd/fpm-golang
+	@go build -ldflags "$(LDFLAGS)" -o $(CLI) ./cmd/autopackager-golang
 
 .PHONY: test
 test:

@@ -55,9 +55,9 @@ jobs:
           args=""
           [ -z "${IN_VERSION:-}" ] || args="$args --version=$IN_VERSION"
           [ "${IN_REVISION:-0}" = "0" ] || args="$args --revision=$IN_REVISION"
-          go build -o fpm-golang ./cmd/fpm-golang
+          go build -o autopackager-golang ./cmd/autopackager-golang
           # shellcheck disable=SC2086
-          plan=$(./fpm-golang release plan $args)
+          plan=$(./autopackager-golang release plan $args)
           echo "$plan"
           echo "plan=$plan" >> "$GITHUB_OUTPUT"
           if [ "$(echo "$plan" | jq '.include | length')" -gt 0 ]; then echo "has_work=true" >> "$GITHUB_OUTPUT"; else echo "has_work=false" >> "$GITHUB_OUTPUT"; fi
@@ -106,7 +106,10 @@ jobs:
           fi
           echo "NFPM_SIGN_KEY=$keys/gpg.key" >> "$GITHUB_ENV"
           echo "NFPM_APK_SIGN_KEY=$keys/apk.key" >> "$GITHUB_ENV"
-          echo "KEYDIR=$keys" >> "$GITHUB_ENV"
+          # smoke-test containers run the upstream binaries: they only ever see public keys
+          pub="$RUNNER_TEMP/pubkeys"; mkdir -p "$pub"
+          cp "$keys/google-golang.gpg.pub" "$keys/google-golang.rsa.pub" "$pub/"
+          echo "KEYDIR=$pub" >> "$GITHUB_ENV"
       - name: Download and verify tarball against the checksum database
         env:
           VERSION: ${{ fromJSON(needs.plan.outputs.plan).version }}
@@ -120,7 +123,7 @@ jobs:
           # go mod download validates the module hash against sum.golang.org (GOSUMDB on)
           export GOMODCACHE="$RUNNER_TEMP/modcache" GOFLAGS=-modcacherw GOTOOLCHAIN=local
           dir=$(cd "$RUNNER_TEMP" && go mod download -json "golang.org/toolchain@v0.0.1-go$VERSION.linux-$ARCH" | jq -r .Dir)
-          bin/fpm-golang release verify --tarball "$TARBALL" --sha256 "$SHA256" --module "$dir"
+          bin/autopackager-golang release verify --tarball "$TARBALL" --sha256 "$SHA256" --module "$dir"
       - name: Build packages
         env:
           VERSION: ${{ fromJSON(needs.plan.outputs.plan).version }}

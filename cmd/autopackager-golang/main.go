@@ -1,4 +1,4 @@
-// Command fpm-golang plans, verifies and describes the repackaging of upstream Go releases.
+// Command autopackager-golang plans, verifies and describes the repackaging of upstream Go releases.
 package main
 
 import (
@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dihedron/fpm-golang/internal/golang"
-	"github.com/dihedron/fpm-golang/pkg/metadata"
+	"github.com/dihedron/autopackager-golang/internal/golang"
+	"github.com/dihedron/autopackager-golang/pkg/metadata"
 	flags "github.com/jessevdk/go-flags"
 )
 

@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -28,7 +29,8 @@ func VerifySHA256(r io.Reader, want string) error {
 // VerifyContent cross-checks a Go tarball against the golang.org/toolchain module
 // directory, whose h1 hash the checksum database has vouched for (via go mod download).
 // Every module file must exist byte-identical in the tarball (the module stores
-// go.mod as _go.mod), and bin/ and pkg/ must not contain any file the module lacks.
+// go.mod as _go.mod), bin/ and pkg/ must not contain any file the module lacks, and
+// the tarball may only hold plain files and directories, each once, below go/.
 func VerifyContent(tgz io.Reader, moduleDir string) error {
 	want := map[string]string{} // path in tarball -> sha256
 	err := filepath.WalkDir(moduleDir, func(p string, d fs.DirEntry, err error) error {
@@ -63,6 +65,7 @@ func VerifyContent(tgz io.Reader, moduleDir string) error {
 		return fmt.Errorf("reading tarball: %w", err)
 	}
 	tr := tar.NewReader(gz)
+	seen := map[string]bool{}
 	for {
 		h, err := tr.Next()
 		if err == io.EOF {
@@ -71,10 +74,21 @@ func VerifyContent(tgz io.Reader, moduleDir string) error {
 		if err != nil {
 			return fmt.Errorf("reading tarball: %w", err)
 		}
-		if h.Typeflag != tar.TypeReg {
+		name := strings.TrimSuffix(h.Name, "/")
+		rel, below := strings.CutPrefix(name, "go/")
+		if name != "go" && (!below || path.Clean(name) != name) {
+			return fmt.Errorf("unexpected entry %q", h.Name)
+		}
+		if h.Typeflag == tar.TypeDir {
 			continue
 		}
-		rel := strings.TrimPrefix(h.Name, "go/")
+		if h.Typeflag != tar.TypeReg || !below {
+			return fmt.Errorf("%q is not a plain file", h.Name)
+		}
+		if seen[rel] {
+			return fmt.Errorf("%q appears twice", h.Name)
+		}
+		seen[rel] = true
 		w, inModule := want[rel]
 		if !inModule {
 			if strings.HasPrefix(rel, "bin/") || strings.HasPrefix(rel, "pkg/") {

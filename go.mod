@@ -1,4 +1,4 @@
-module github.com/dihedron/fpm-golang
+module github.com/dihedron/autopackager-golang
 
 go 1.27.4
 

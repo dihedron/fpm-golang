@@ -4,12 +4,12 @@ package metadata
 import "fmt"
 
 const (
-	Name    = "fpm-golang"
+	Name    = "autopackager-golang"
 	License = "BSD-3-Clause"
 	Author  = "Andrea Funtò <dihedron.dev@gmail.com>"
 )
 
-// Set by the Makefile: -X github.com/dihedron/fpm-golang/pkg/metadata.Version=...
+// Set by the Makefile: -X github.com/dihedron/autopackager-golang/pkg/metadata.Version=...
 var (
 	Version   = "dev"
 	Commit    = "unknown"

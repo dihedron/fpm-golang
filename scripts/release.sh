@@ -29,4 +29,4 @@ govulncheck ./...
 command -v gitleaks >/dev/null || die "gitleaks not installed"
 gitleaks detect --no-banner
 
-gh release create "$next" --target main --latest --title "fpm-golang $next" --generate-notes
+gh release create "$next" --target main --latest --title "autopackager-golang $next" --generate-notes
